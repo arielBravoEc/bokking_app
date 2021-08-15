@@ -1,13 +1,13 @@
 //this is a dymanical routing
 import nc from "next-connect";
-import dbConnect from "../../../config/dbConnect";
+import dbConnect from "../../../backend/config/dbConnect";
 import {
   getSingleRoom,
   updateRoom,
   deleteRoom,
-} from "../../../controllers/roomControllers";
-
-const handler = nc();
+} from "../../../backend/controllers/roomControllers";
+import onError from "../../../backend/middlewares/errors";
+const handler = nc({ onError });
 dbConnect();
 
 handler.get(getSingleRoom);

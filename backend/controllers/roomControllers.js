@@ -1,12 +1,26 @@
 import Room from "../models/room";
+import ErrorHandler from "../../utils/errorHandler";
+//import CatchAsyncErrors from '../middlewares/catchAsyncErrors'
+import APIFeatures from "../../utils/apiFeatures";
 
 const getAllRooms = async (req, res) => {
   try {
-    const rooms = await Room.find();
+    const resPerPage = 4;
+    const roomCount = await Room.countDocuments();
+    const apiFeatures = new APIFeatures(Room.find(), req.query)
+      .search()
+      .filter();
 
+    //const rooms = await Room.find();
+    let rooms = await apiFeatures.query;
+    let filteredRoomsCount = rooms.length;
+    apiFeatures.pagination(resPerPage);
+    rooms = await apiFeatures.query;
     res.status(200).json({
       success: true,
-      count: rooms.length,
+      roomCount,
+      resPerPage,
+      filteredRoomsCount,
       rooms,
     });
   } catch (error) {
@@ -27,24 +41,22 @@ const newRoom = async (req, res) => {
       room,
     });
   } catch (error) {
-    res.status(400).json({
-      sucess: false,
-      error: error.message,
-    });
+    return next(new ErrorHandler(error.message, 400));
   }
 };
 
 // Get room details /api/rooms/:id
-const getSingleRoom = async (req, res) => {
+const getSingleRoom = async (req, res, next) => {
   try {
     //in next doesnt have params, we have query
     const room = await Room.findById(req.query.id);
 
     if (!room) {
-      res.status(404).json({
+      /* res.status(404).json({
         sucess: false,
         error: "Room not found with this ID",
-      });
+      }); */
+      return next(new ErrorHandler("Room not found with this ID", 404));
     } else {
       res.status(200).json({
         success: true,
@@ -53,6 +65,7 @@ const getSingleRoom = async (req, res) => {
       });
     }
   } catch (error) {
+    console.log(err.name);
     res.status(400).json({
       sucess: false,
       error: error.message,
@@ -61,16 +74,13 @@ const getSingleRoom = async (req, res) => {
 };
 
 // Update room details /api/rooms/:id
-const updateRoom = async (req, res) => {
+const updateRoom = async (req, res, next) => {
   try {
     //in next doesnt have params, we have query
     let room = await Room.findById(req.query.id);
 
     if (!room) {
-      res.status(404).json({
-        sucess: false,
-        error: "Room not found with this ID",
-      });
+      return next(new ErrorHandler("Room not found with this ID", 404));
     } else {
       //req.body is the updated room
       room = await Room.findByIdAndUpdate(req.query.id, req.body, {
@@ -94,16 +104,13 @@ const updateRoom = async (req, res) => {
 };
 
 // Delete room /api/rooms/:id
-const deleteRoom = async (req, res) => {
+const deleteRoom = async (req, res, next) => {
   try {
     //in next doesnt have params, we have query
     const room = await Room.findById(req.query.id);
 
     if (!room) {
-      res.status(404).json({
-        sucess: false,
-        error: "Room not found with this ID",
-      });
+      return next(new ErrorHandler("Room not found with this ID", 404));
     } else {
       await room.remove();
       res.status(200).json({

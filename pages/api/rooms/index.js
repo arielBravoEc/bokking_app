@@ -1,8 +1,11 @@
 import nc from "next-connect";
-import dbConnect from "../../../config/dbConnect";
-import { getAllRooms, newRoom } from "../../../controllers/roomControllers";
-
-const handler = nc();
+import dbConnect from "../../../backend/config/dbConnect";
+import {
+  getAllRooms,
+  newRoom,
+} from "../../../backend/controllers/roomControllers";
+import onError from "../../../backend/middlewares/errors";
+const handler = nc({ onError });
 dbConnect();
 //para usar middleware
 //handler.use(middleware).get(getAllRooms);
